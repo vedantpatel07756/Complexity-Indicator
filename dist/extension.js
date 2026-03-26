@@ -33,7 +33,7 @@ __export(extension_exports, {
   activate: () => activate
 });
 module.exports = __toCommonJS(extension_exports);
-var vscode2 = __toESM(require("vscode"));
+var vscode3 = __toESM(require("vscode"));
 
 // src/core/metrics.ts
 function calculateMetrics(text) {
@@ -72,6 +72,7 @@ function updateStatusBar(label, score) {
 }
 
 // src/ui/webview/viewProvider.ts
+var vscode2 = __toESM(require("vscode"));
 var path = __toESM(require("path"));
 var fs = __toESM(require("fs"));
 var ComplexityViewProvider = class {
@@ -80,27 +81,43 @@ var ComplexityViewProvider = class {
   }
   static viewType = "complexityView";
   resolveWebviewView(webviewView) {
+    console.log("\u{1F3AF} resolveWebviewView called!");
     const webview = webviewView.webview;
+    const mediaPath = vscode2.Uri.file(path.join(this.context.extensionPath, "media"));
     webview.options = {
-      enableScripts: true
+      enableScripts: true,
+      localResourceRoots: [mediaPath]
     };
-    const htmlPath = path.join(this.context.extensionPath, "media", "index.html");
-    const html = fs.readFileSync(htmlPath, "utf-8");
-    webview.html = html;
+    try {
+      const htmlPath = path.join(this.context.extensionPath, "media", "index.html");
+      console.log("\u{1F4C2} Loading webview HTML from:", htmlPath);
+      console.log("\u{1F4C2} File exists:", fs.existsSync(htmlPath));
+      let html = fs.readFileSync(htmlPath, "utf-8");
+      const styleCssUri = webview.asWebviewUri(vscode2.Uri.file(path.join(this.context.extensionPath, "media", "style.css")));
+      html = html.replace(/href="style\.css"/g, `href="${styleCssUri}"`);
+      console.log("\u2705 Webview HTML loaded successfully");
+      webview.html = html;
+    } catch (error) {
+      console.error("\u274C Failed to load webview HTML:", error);
+      webview.html = `<h1>Error loading view</h1><p>${String(error)}</p>`;
+    }
   }
 };
 
 // src/extension.ts
 function activate(context) {
+  console.log("\u{1F525} Extension Activation Started");
   const provider = new ComplexityViewProvider(context);
-  context.subscriptions.push(
-    vscode2.window.registerWebviewViewProvider(
-      ComplexityViewProvider.viewType,
-      provider
-    )
+  console.log("\u2705 ComplexityViewProvider created");
+  const subscription = vscode3.window.registerWebviewViewProvider(
+    ComplexityViewProvider.viewType,
+    provider
   );
+  console.log("\u2705 Webview view provider registered for viewType:", ComplexityViewProvider.viewType);
+  context.subscriptions.push(subscription);
+  console.log("\u2705 Extension fully initialized");
   const update = () => {
-    const editor = vscode2.window.activeTextEditor;
+    const editor = vscode3.window.activeTextEditor;
     if (!editor) return;
     const text = editor.document.getText();
     const { loc, imports } = calculateMetrics(text);
@@ -109,8 +126,8 @@ function activate(context) {
     console.log({ loc, imports, score, label });
     updateStatusBar(label, score);
   };
-  vscode2.window.onDidChangeActiveTextEditor(update);
-  vscode2.workspace.onDidSaveTextDocument(update);
+  vscode3.window.onDidChangeActiveTextEditor(update);
+  vscode3.workspace.onDidSaveTextDocument(update);
   update();
 }
 // Annotate the CommonJS export names for ESM import in node:

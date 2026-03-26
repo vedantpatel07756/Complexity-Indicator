@@ -4,15 +4,21 @@ import { getScore } from './core/scorer';
 import { updateStatusBar } from './ui/statusBar';
 import { ComplexityViewProvider } from './ui/webview/viewProvider';
 export function activate(context: vscode.ExtensionContext) {
+  console.log('🔥 Extension Activation Started');
 
-const provider = new ComplexityViewProvider(context);
+  const provider = new ComplexityViewProvider(context);
+  console.log('✅ ComplexityViewProvider created');
 
-context.subscriptions.push(
-  vscode.window.registerWebviewViewProvider(
+  const subscription = vscode.window.registerWebviewViewProvider(
     ComplexityViewProvider.viewType,
     provider
-  )
-);
+  );
+  console.log('✅ Webview view provider registered for viewType:', ComplexityViewProvider.viewType);
+  
+  context.subscriptions.push(subscription);
+
+  // Webview provider is now ready and will render when view is opened
+  console.log('✅ Extension fully initialized');
 
   const update = () => {
   const editor = vscode.window.activeTextEditor;

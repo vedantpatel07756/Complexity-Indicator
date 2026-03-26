@@ -10,28 +10,30 @@
     "Other"
   ],
   "activationEvents": [
-  "onView:complexityView"
-],
+    "onStartupFinished",
+    "onView:complexityView"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
-        "viewsContainers": {
-        "activitybar": [
-          {
-            "id": "complexity-sidebar",
-            "title": "Complexity",
-            "icon": "resources/icon.svg"
-          }
-        ]
-      },
-      "views": {
-        "complexity-sidebar": [
-          {
-            "id": "complexityView",
-            "name": "Complexity Indicator",
-            "icon": "resources/icon.svg"
-          }
-        ]
-      },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "complexity-sidebar",
+          "title": "Complexity",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "complexity-sidebar": [
+        {
+          "type": "webview",
+          "id": "complexityView",
+          "name": "Complexity Indicator",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "flutter-file-complexity-indicator.helloWorld",
