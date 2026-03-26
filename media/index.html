@@ -198,6 +198,10 @@
       activeIcon = null;
     }
 
+    // ── Signal ready so extension can replay cached metrics ───────────────────
+    const vscode = acquireVsCodeApi();
+    vscode.postMessage({ type: 'ready' });
+
     // ── Data updates ──────────────────────────────────────────────────────────
     window.addEventListener('message', event => {
       const { filename, metrics, score, grade, label, maintainability } = event.data;

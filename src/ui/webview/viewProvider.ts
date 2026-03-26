@@ -30,10 +30,13 @@ export class ComplexityViewProvider implements vscode.WebviewViewProvider {
       html = html.replace(/href="style\.css"/g, `href="${styleCssUri}"`);
 
       webview.html = html;
-      // Replay cached metrics so the panel shows data immediately on open
-      if (this._lastData) {
-        webview.postMessage(this._lastData);
-      }
+
+      // Wait for the webview JS to signal 'ready', then send cached metrics
+      webview.onDidReceiveMessage(msg => {
+        if (msg.type === 'ready' && this._lastData) {
+          webview.postMessage(this._lastData);
+        }
+      });
     } catch (error) {
       webview.html = `<h1>Error loading view</h1><p>${String(error)}</p>`;
     }
