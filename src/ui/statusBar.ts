@@ -1,0 +1,16 @@
+import * as vscode from 'vscode';
+
+const statusBar = vscode.window.createStatusBarItem(
+  vscode.StatusBarAlignment.Right,
+  100
+);
+
+export function updateStatusBar(label: string, score: number) {
+  let icon = '🟢';
+
+  if (label === 'Medium') icon = '🟡';
+  if (label === 'High') icon = '🔴';
+
+  statusBar.text = `Complexity: ${icon} ${label} (${score.toFixed(1)})`;
+  statusBar.show();
+}
