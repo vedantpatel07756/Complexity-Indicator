@@ -7,6 +7,7 @@ export class ComplexityViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'complexityView';
 
   private _view?: vscode.WebviewView;
+  private _lastData?: Parameters<ComplexityViewProvider['postMetrics']>[0];
 
   constructor(private readonly context: vscode.ExtensionContext) {}
 
@@ -29,12 +30,17 @@ export class ComplexityViewProvider implements vscode.WebviewViewProvider {
       html = html.replace(/href="style\.css"/g, `href="${styleCssUri}"`);
 
       webview.html = html;
+      // Replay cached metrics so the panel shows data immediately on open
+      if (this._lastData) {
+        webview.postMessage(this._lastData);
+      }
     } catch (error) {
       webview.html = `<h1>Error loading view</h1><p>${String(error)}</p>`;
     }
   }
 
   postMetrics(data: { filename: string; metrics: FileMetrics; score: number; grade: string; label: string; maintainability: number }) {
+    this._lastData = data;
     this._view?.webview.postMessage(data);
   }
 }

@@ -173,6 +173,7 @@ var ComplexityViewProvider = class {
   }
   static viewType = "complexityView";
   _view;
+  _lastData;
   resolveWebviewView(webviewView) {
     this._view = webviewView;
     const webview = webviewView.webview;
@@ -187,11 +188,15 @@ var ComplexityViewProvider = class {
       const styleCssUri = webview.asWebviewUri(vscode2.Uri.file(path.join(this.context.extensionPath, "media", "style.css")));
       html = html.replace(/href="style\.css"/g, `href="${styleCssUri}"`);
       webview.html = html;
+      if (this._lastData) {
+        webview.postMessage(this._lastData);
+      }
     } catch (error) {
       webview.html = `<h1>Error loading view</h1><p>${String(error)}</p>`;
     }
   }
   postMetrics(data) {
+    this._lastData = data;
     this._view?.webview.postMessage(data);
   }
 };
