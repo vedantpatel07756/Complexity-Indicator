@@ -1,35 +1,63 @@
 export interface FileMetrics {
-  loc: number;           // Non-blank, non-comment lines
-  totalLines: number;    // Raw line count
-  imports: number;       // Import statements
-  functions: number;     // Function / method declarations
-  cyclomaticComplexity: number;  // Decision points + 1
-  maxNestingDepth: number;       // Deepest control-flow nesting
-  avgParams: number;     // Average parameters per function
-  commentRatio: number;  // 0–100 percentage
+  loc: number;
+  totalLines: number;
+  imports: number;
+  functions: number;
+  cyclomaticComplexity: number;
+  maxNestingDepth: number;
+  avgParams: number;
+  commentRatio: number;
 }
 
 export function calculateMetrics(text: string): FileMetrics {
   const lines = text.split('\n');
   const totalLines = lines.length;
 
-  // ── Basic line counts ─────────────────────────────────────────────────────
+  // ── Comment detection (covers all major languages) ────────────────────────
+  // Supports: // (JS/TS/Dart/Java/Kotlin/Go/Swift/C/C++)
+  //           #  (Python/Ruby/Shell/YAML)
+  //           /* */ block comments
+  //           <!-- --> HTML/XML comments
+  //           --  SQL/Lua comments
   let commentLines = 0;
   let inBlockComment = false;
+  let inHtmlComment = false;
 
   for (const raw of lines) {
     const line = raw.trim();
+
+    // HTML/XML block comment
+    if (inHtmlComment) {
+      commentLines++;
+      if (line.includes('-->')) { inHtmlComment = false; }
+      continue;
+    }
+    if (line.startsWith('<!--')) {
+      commentLines++;
+      if (!line.includes('-->')) { inHtmlComment = true; }
+      continue;
+    }
+
+    // C-style block comment /* */
     if (inBlockComment) {
       commentLines++;
-      if (line.includes('*/')) inBlockComment = false;
+      if (line.includes('*/')) { inBlockComment = false; }
       continue;
     }
     if (line.startsWith('/*') || line.startsWith('/**')) {
       commentLines++;
-      if (!line.includes('*/')) inBlockComment = true;
+      if (!line.includes('*/')) { inBlockComment = true; }
       continue;
     }
-    if (line.startsWith('//') || line.startsWith('*')) {
+
+    // Single-line comment styles
+    if (
+      line.startsWith('//') ||   // JS/TS/Dart/Java/Kotlin/Go/Swift/C/C++/Rust
+      line.startsWith('*')  ||   // continuation inside block comment
+      line.startsWith('#')  ||   // Python/Ruby/Shell/YAML/R
+      line.startsWith('--') ||   // SQL/Lua/Haskell
+      line.startsWith('%')       // MATLAB/LaTeX
+    ) {
       commentLines++;
     }
   }
@@ -38,68 +66,96 @@ export function calculateMetrics(text: string): FileMetrics {
   const loc = totalLines - blankLines - commentLines;
   const commentRatio = totalLines > 0 ? Math.round((commentLines / totalLines) * 100) : 0;
 
-  // ── Imports ───────────────────────────────────────────────────────────────
-  const imports = lines.filter(l => l.trim().startsWith('import ')).length;
+  // ── Import / dependency statements (all major languages) ──────────────────
+  // import  → JS/TS/Dart/Java/Kotlin/Python/Swift/Go
+  // require → Node.js / CommonJS
+  // include → C/C++/PHP
+  // using   → C# / C++
+  // from X import → Python
+  // use     → Rust / PHP
+  // #include→ C/C++
+  const importPatterns = [
+    /^\s*import\s/,
+    /^\s*require\s*\(/,
+    /^\s*#include\s/,
+    /^\s*include\s/,
+    /^\s*using\s/,
+    /^\s*use\s/,
+    /^\s*from\s+\S+\s+import\s/,
+  ];
+  const imports = lines.filter(l =>
+    importPatterns.some(p => p.test(l))
+  ).length;
 
-  // ── Function declarations ─────────────────────────────────────────────────
-  // Matches Dart/JS/TS style: `void foo(`, `Future<X> bar(`, `function baz(`
-  const funcRegex = /(?:^|\s)(?:void|Future|String|int|double|bool|List|Map|Widget|dynamic|async\s+function|function)\s+\w+\s*\(|(?:^|\s)\w+\s+\w+\s*\([^)]*\)\s*(?:async\s*)?\{/gm;
-  const functionMatches = text.match(funcRegex) ?? [];
-  const functions = functionMatches.length;
+  // ── Function / method declarations (all major languages) ──────────────────
+  // Covers:
+  //   function foo(         JS/TS/PHP
+  //   const foo = (         JS/TS arrow function
+  //   const foo = async (   JS/TS async arrow
+  //   void foo(             Java/Kotlin/Dart/C/C++/C#
+  //   def foo(              Python/Ruby
+  //   func foo(             Go/Swift
+  //   fn foo(               Rust
+  //   fun foo(              Kotlin
+  //   sub foo(              Perl/VBA
+  const funcRegex = /(?:^|[\s;{])(?:function\s+\w+|(?:const|let|var)\s+\w+\s*=\s*(?:async\s*)?\(|(?:public|private|protected|static|async|override|abstract|sealed|virtual|inline)[\s\w]*\s+\w+\s*\(|(?:void|int|float|double|bool|boolean|char|long|short|byte|string|String|auto|var|dynamic|object|Any|Unit|List|Map|Future|Stream|Widget)\s+\w+\s*\(|(?:def|func|fn|fun|sub)\s+\w+\s*\()/gm;
+  const functions = (text.match(funcRegex) ?? []).length;
 
-  // ── Average parameters per function ──────────────────────────────────────
-  // Grab each function signature and count comma-separated params
+  // ── Average parameters ─────────────────────────────────────────────────────
   const paramCounts: number[] = [];
-  const sigRegex = /\w+\s*\(([^)]*)\)\s*(?:async\s*)?\{/g;
+  const sigRegex = /\w+\s*\(([^)]{0,200})\)\s*(?:->[\w\s<>[\]]+)?\s*[{:]/g;
   let m: RegExpExecArray | null;
   while ((m = sigRegex.exec(text)) !== null) {
     const inner = m[1].trim();
-    if (inner.length === 0) {
-      paramCounts.push(0);
-    } else {
-      paramCounts.push(inner.split(',').length);
-    }
+    paramCounts.push(inner.length === 0 ? 0 : inner.split(',').length);
   }
   const avgParams = paramCounts.length > 0
     ? Math.round(paramCounts.reduce((a, b) => a + b, 0) / paramCounts.length * 10) / 10
     : 0;
 
   // ── Cyclomatic Complexity ─────────────────────────────────────────────────
-  // Start at 1; +1 for every decision point
+  // Decision keywords universal across languages
   const decisionKeywords = [
     /\bif\b/g,
     /\belse\s+if\b/g,
+    /\belif\b/g,          // Python
+    /\bunless\b/g,        // Ruby/Perl
     /\bfor\b/g,
+    /\bforeach\b/g,
     /\bwhile\b/g,
     /\bdo\b/g,
     /\bcase\b/g,
+    /\bwhen\b/g,          // Ruby/Kotlin
     /\bcatch\b/g,
-    /\?\./g,        // null-safe operator
-    /\?\?/g,        // null-coalescing
-    /\?\s/g,        // ternary
+    /\brescue\b/g,        // Ruby
+    /\bexcept\b/g,        // Python
+    /\?\./g,              // null-safe
+    /\?\?/g,              // null-coalescing
+    /\?\s/g,              // ternary
     /&&/g,
     /\|\|/g,
+    /\band\b/g,           // Python/Ruby
+    /\bor\b/g,            // Python/Ruby
   ];
   let cyclomaticComplexity = 1;
   for (const pattern of decisionKeywords) {
     const matches = text.match(pattern);
-    if (matches) cyclomaticComplexity += matches.length;
+    if (matches) { cyclomaticComplexity += matches.length; }
   }
 
   // ── Maximum Nesting Depth ─────────────────────────────────────────────────
+  // Brace-based (C/Java/JS/TS/Go/Rust etc.) + indent-based (Python)
   let depth = 0;
   let maxNestingDepth = 0;
-  const nestingKeywords = /\b(if|else|for|while|do|switch|try|catch|finally)\b/;
+  const nestingKeywords = /\b(if|else|elif|for|foreach|while|do|switch|try|catch|finally|rescue|except|unless|when|with)\b/;
 
   for (const raw of lines) {
     const line = raw.trim();
-    // Only count structural braces following a control keyword
-    if (nestingKeywords.test(line) && line.endsWith('{')) {
+    if (nestingKeywords.test(line) && (line.endsWith('{') || line.endsWith(':'))) {
       depth++;
-      if (depth > maxNestingDepth) maxNestingDepth = depth;
+      if (depth > maxNestingDepth) { maxNestingDepth = depth; }
     } else if (line === '}' || line === '};' || line === '},') {
-      // Only decrement if we opened a nesting block (heuristic)
-      if (depth > 0) depth--;
+      if (depth > 0) { depth--; }
     }
   }
 
