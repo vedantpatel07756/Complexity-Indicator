@@ -1,7 +1,7 @@
 # Complexity Indicator
 
 <p align="center">
-  <img src="resources/icon.png" alt="Complexity Indicator Logo" width="120"/>
+  <img src="https://raw.githubusercontent.com/vedantpatel07756/Complexity-Indicator/main/resources/icon.png" alt="Complexity Indicator Logo" width="120"/>
 </p>
 
 A VS Code extension that analyses the complexity of your active file in real time and displays a rich metrics dashboard in the sidebar — built with Flutter/Dart developers in mind, but works with any language.

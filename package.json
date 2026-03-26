@@ -4,8 +4,16 @@
   "description": "Analyze and visualize file complexity",
   "version": "0.0.1",
   "publisher": "vedantpatel",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vedantpatel07756/Complexity-Indicator.git"
+  },
+  "homepage": "https://github.com/vedantpatel07756/Complexity-Indicator",
+  "bugs": {
+    "url": "https://github.com/vedantpatel07756/Complexity-Indicator/issues"
+  },
   "engines": {
-    "vscode": "^1.80.0"
+     "vscode": "^1.110.0"
   },
   "categories": [
     "Other"
