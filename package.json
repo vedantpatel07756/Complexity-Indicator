@@ -2,8 +2,9 @@
   "name": "complexity-indicator",
   "displayName": "Complexity Indicator",
   "description": "Analyze and visualize file complexity",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "vedantpatel",
+  "icon": "assets/icon.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/vedantpatel07756/Complexity-Indicator.git"
