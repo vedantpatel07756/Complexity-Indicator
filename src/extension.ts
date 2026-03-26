@@ -1,42 +1,42 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { calculateMetrics } from './core/metrics';
 import { getScore } from './core/scorer';
 import { updateStatusBar } from './ui/statusBar';
 import { ComplexityViewProvider } from './ui/webview/viewProvider';
-export function activate(context: vscode.ExtensionContext) {
-  console.log('🔥 Extension Activation Started');
 
+export function activate(context: vscode.ExtensionContext) {
   const provider = new ComplexityViewProvider(context);
-  console.log('✅ ComplexityViewProvider created');
 
   const subscription = vscode.window.registerWebviewViewProvider(
     ComplexityViewProvider.viewType,
     provider
   );
-  console.log('✅ Webview view provider registered for viewType:', ComplexityViewProvider.viewType);
-  
   context.subscriptions.push(subscription);
 
-  // Webview provider is now ready and will render when view is opened
-  console.log('✅ Extension fully initialized');
-
   const update = () => {
-  const editor = vscode.window.activeTextEditor;
-  if (!editor) return;
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) { return; }
 
-  const text = editor.document.getText();
+    const text = editor.document.getText();
+    const filename = path.basename(editor.document.fileName);
 
-  const { loc, imports } = calculateMetrics(text);
-  const { score, label } = getScore(loc, imports);
+    const metrics = calculateMetrics(text);
+    const { score, grade, label, maintainability } = getScore(metrics);
 
-  console.log("🔥 Complexity Extension Running");
-  console.log({ loc, imports, score, label });
+    updateStatusBar(label, score);
+    provider.postMetrics({ filename, metrics, score, grade, label, maintainability });
+  };
 
-  updateStatusBar(label, score);
-};
-
-  vscode.window.onDidChangeActiveTextEditor(update);
-  vscode.workspace.onDidSaveTextDocument(update);
+  context.subscriptions.push(
+    vscode.window.onDidChangeActiveTextEditor(update),
+    vscode.workspace.onDidSaveTextDocument(update),
+    vscode.workspace.onDidChangeTextDocument(e => {
+      if (e.document === vscode.window.activeTextEditor?.document) {
+        update();
+      }
+    })
+  );
 
   update();
 }

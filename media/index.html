@@ -5,33 +5,239 @@
 </head>
 <body>
 
-  <h2>Complexity Indicator</h2>
+  <div class="header">
+    <div class="header-title">Complexity Indicator</div>
+    <div class="header-file" id="filename">—</div>
+  </div>
 
+  <!-- Tooltip container (single, reused) -->
+  <div class="tooltip-box" id="tooltip"></div>
+
+  <!-- Score + Grade -->
+  <div class="score-card" id="score-card">
+    <div class="score-left">
+      <div class="label-row">
+        <div class="section-label">COMPLEXITY SCORE</div>
+        <span class="info-icon" data-tip="score">ⓘ</span>
+      </div>
+      <div class="score-number"><span id="score">—</span><span class="score-max">/100</span></div>
+      <div class="badge-row">
+        <span class="badge" id="badge">—</span>
+        <span class="grade" id="grade">—</span>
+      </div>
+    </div>
+    <div class="score-right">
+      <svg class="ring" viewBox="0 0 36 36">
+        <circle class="ring-bg" cx="18" cy="18" r="15.9"/>
+        <circle class="ring-fill" id="ring-fill" cx="18" cy="18" r="15.9"
+          stroke-dasharray="0 100" stroke-dashoffset="25"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="progress-bar-wrap">
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- Maintainability -->
   <div class="card">
-    <div class="label">ACTIVE EDITOR</div>
-    <div class="file">plan_check.dart</div>
+    <div class="label-row">
+      <div class="section-label">MAINTAINABILITY INDEX</div>
+      <span class="info-icon" data-tip="mi">ⓘ</span>
+    </div>
+    <div class="mi-row">
+      <div class="mi-value" id="mi-value">—</div>
+      <div class="mi-bar-wrap">
+        <div class="mi-track">
+          <div class="mi-fill" id="mi-fill" style="width:0%"></div>
+        </div>
+        <div class="mi-labels">
+          <span>Poor</span><span>Fair</span><span>Good</span><span>Excellent</span>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="row">
-    <div class="card">
-      <div class="label">LOC</div>
-      <div class="value">245</div>
+  <!-- Metrics grid -->
+  <div class="grid">
+    <div class="metric-card">
+      <div class="label-row">
+        <div class="section-label">LOC</div>
+        <span class="info-icon" data-tip="loc">ⓘ</span>
+      </div>
+      <div class="metric-value" id="loc">—</div>
+      <div class="metric-sub">non-blank lines</div>
     </div>
-
-    <div class="card">
-      <div class="label">Imports</div>
-      <div class="value">12</div>
+    <div class="metric-card">
+      <div class="label-row">
+        <div class="section-label">FUNCTIONS</div>
+        <span class="info-icon" data-tip="functions">ⓘ</span>
+      </div>
+      <div class="metric-value" id="functions">—</div>
+      <div class="metric-sub">declarations</div>
+    </div>
+    <div class="metric-card">
+      <div class="label-row">
+        <div class="section-label">CYCLOMATIC</div>
+        <span class="info-icon" data-tip="cc">ⓘ</span>
+      </div>
+      <div class="metric-value" id="cc">—</div>
+      <div class="metric-sub">decision paths</div>
+    </div>
+    <div class="metric-card">
+      <div class="label-row">
+        <div class="section-label">MAX NESTING</div>
+        <span class="info-icon" data-tip="nesting">ⓘ</span>
+      </div>
+      <div class="metric-value" id="nesting">—</div>
+      <div class="metric-sub">depth levels</div>
+    </div>
+    <div class="metric-card">
+      <div class="label-row">
+        <div class="section-label">AVG PARAMS</div>
+        <span class="info-icon" data-tip="params">ⓘ</span>
+      </div>
+      <div class="metric-value" id="params">—</div>
+      <div class="metric-sub">per function</div>
+    </div>
+    <div class="metric-card">
+      <div class="label-row">
+        <div class="section-label">COMMENT</div>
+        <span class="info-icon" data-tip="comments">ⓘ</span>
+      </div>
+      <div class="metric-value" id="comments">—</div>
+      <div class="metric-sub">ratio %</div>
     </div>
   </div>
 
+  <!-- Imports -->
   <div class="card">
-    <div class="label">Complexity Score</div>
-    <div class="score">48 / 100</div>
-    <div class="badge">MEDIUM</div>
-    <div class="progress">
-      <div class="progress-bar" style="width:48%"></div>
+    <div class="label-row">
+      <div class="section-label">IMPORTS</div>
+      <span class="info-icon" data-tip="imports">ⓘ</span>
     </div>
+    <div class="imports-value" id="imports">—</div>
   </div>
+
+  <script>
+    // ── Tooltip definitions ───────────────────────────────────────────────────
+    const TIPS = {
+      score:     { title: 'Complexity Score', body: 'A weighted 0–100 score combining Cyclomatic Complexity (35%), Max Nesting (25%), LOC (20%), Avg Params (12%), and Function Count (8%). Higher = harder to maintain. Aim for ≤40.' },
+      mi:        { title: 'Maintainability Index', body: 'Based on the Microsoft formula: MI = 171 − 0.23×CC − 16.2×ln(LOC). Normalised to 0–100. ≥85 Excellent · ≥70 Good · ≥50 Fair · <50 Poor.' },
+      loc:       { title: 'Lines of Code', body: 'Non-blank, non-comment lines. Counts only code that actually runs. A good rule of thumb: keep files under 300 LOC to maintain readability.' },
+      functions: { title: 'Function Count', body: 'Total number of function or method declarations in the file. Files with >15 functions often benefit from being split into smaller modules.' },
+      cc:        { title: 'Cyclomatic Complexity', body: 'Counts the number of independent execution paths (McCabe, 1976). Increments for: if · else if · for · while · catch · case · && · || · ?· ??. Starts at 1. ≤10 simple · 11–20 moderate · >20 high risk.' },
+      nesting:   { title: 'Max Nesting Depth', body: 'The deepest level of nested control flow (if inside for inside if = 3). Deep nesting is hard to read and test. Google recommends ≤3. Color turns orange at 3, red at 5+.' },
+      params:    { title: 'Avg Parameters', body: 'Average number of parameters across all functions. Functions with >4 parameters are harder to call and test. Consider grouping params into an object/class.' },
+      comments:  { title: 'Comment Ratio', body: 'Percentage of lines that are comments (// or /* */). A ratio of 15–30% is healthy. Too low may mean under-documented code; too high may indicate outdated or noisy comments.' },
+      imports:   { title: 'Import Count', body: 'Total import statements in the file. A high import count can indicate tight coupling or a file doing too much. Consider if some imports could live in a dedicated helper.' },
+    };
+
+    // ── Colors ────────────────────────────────────────────────────────────────
+    const COLORS = {
+      low:      '#4ec9b0',
+      medium:   '#dcdcaa',
+      high:     '#ce9178',
+      vhigh:    '#f44747',
+      critical: '#ff0000',
+    };
+
+    function scoreColor(s) {
+      if (s <= 20) return COLORS.low;
+      if (s <= 40) return COLORS.medium;
+      if (s <= 60) return COLORS.high;
+      if (s <= 80) return COLORS.vhigh;
+      return COLORS.critical;
+    }
+    function miColor(m) {
+      if (m >= 85) return COLORS.low;
+      if (m >= 70) return COLORS.medium;
+      if (m >= 50) return COLORS.high;
+      return COLORS.vhigh;
+    }
+    function nestingColor(d) {
+      if (d <= 2) return COLORS.low;
+      if (d <= 4) return COLORS.medium;
+      return COLORS.vhigh;
+    }
+
+    // ── Tooltip logic ─────────────────────────────────────────────────────────
+    const tooltipEl = document.getElementById('tooltip');
+    let activeIcon = null;
+
+    document.addEventListener('click', e => {
+      const icon = e.target.closest('.info-icon');
+      if (icon) {
+        if (activeIcon === icon) {
+          hideTooltip();
+          return;
+        }
+        const key = icon.dataset.tip;
+        const tip = TIPS[key];
+        if (!tip) { return; }
+
+        tooltipEl.innerHTML = `<div class="tip-title">${tip.title}</div><div class="tip-body">${tip.body}</div>`;
+
+        // Position below the icon
+        const rect = icon.getBoundingClientRect();
+        tooltipEl.style.top = (rect.bottom + window.scrollY + 6) + 'px';
+        tooltipEl.style.left = '12px';
+        tooltipEl.style.right = '12px';
+        tooltipEl.classList.add('visible');
+        activeIcon = icon;
+        e.stopPropagation();
+      } else {
+        hideTooltip();
+      }
+    });
+
+    function hideTooltip() {
+      tooltipEl.classList.remove('visible');
+      activeIcon = null;
+    }
+
+    // ── Data updates ──────────────────────────────────────────────────────────
+    window.addEventListener('message', event => {
+      const { filename, metrics, score, grade, label, maintainability } = event.data;
+      const { loc, imports, functions, cyclomaticComplexity, maxNestingDepth, avgParams, commentRatio } = metrics;
+
+      const color = scoreColor(score);
+
+      document.getElementById('filename').textContent = filename;
+
+      document.getElementById('score').textContent = score;
+      document.getElementById('badge').textContent = label.toUpperCase();
+      document.getElementById('badge').style.background = color + '22';
+      document.getElementById('badge').style.borderColor = color;
+      document.getElementById('badge').style.color = color;
+      document.getElementById('grade').textContent = grade;
+      document.getElementById('grade').style.color = color;
+      document.getElementById('score-card').style.borderColor = color + '55';
+
+      const ring = document.getElementById('ring-fill');
+      ring.style.stroke = color;
+      ring.setAttribute('stroke-dasharray', `${score} ${100 - score}`);
+
+      document.getElementById('progress-fill').style.width = score + '%';
+      document.getElementById('progress-fill').style.background = color;
+
+      document.getElementById('mi-value').textContent = maintainability;
+      document.getElementById('mi-value').style.color = miColor(maintainability);
+      document.getElementById('mi-fill').style.width = maintainability + '%';
+      document.getElementById('mi-fill').style.background = miColor(maintainability);
+
+      document.getElementById('loc').textContent = loc;
+      document.getElementById('functions').textContent = functions;
+      document.getElementById('cc').textContent = cyclomaticComplexity;
+      document.getElementById('nesting').textContent = maxNestingDepth;
+      document.getElementById('nesting').style.color = nestingColor(maxNestingDepth);
+      document.getElementById('params').textContent = avgParams;
+      document.getElementById('comments').textContent = commentRatio + '%';
+      document.getElementById('imports').textContent = imports;
+    });
+  </script>
 
 </body>
 </html>
