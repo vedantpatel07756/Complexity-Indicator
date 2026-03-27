@@ -31,7 +31,8 @@
   ],
   "activationEvents": [
     "onStartupFinished",
-    "onView:complexityView"
+    "onView:complexityView",
+    "onCommand:complexity-indicator.openView"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -58,6 +59,10 @@
       {
         "command": "flutter-file-complexity-indicator.helloWorld",
         "title": "Hello World"
+      },
+      {
+        "command": "complexity-indicator.openView",
+        "title": "Open Complexity Indicator"
       }
     ]
   },

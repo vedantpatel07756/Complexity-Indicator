@@ -2,17 +2,28 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { calculateMetrics } from './core/metrics';
 import { getScore } from './core/scorer';
-import { updateStatusBar } from './ui/statusBar';
+import { getStatusBarItem, initializeStatusBar, updateStatusBar } from './ui/statusBar';
 import { ComplexityViewProvider } from './ui/webview/viewProvider';
+
+const OPEN_COMPLEXITY_VIEW_COMMAND = 'complexity-indicator.openView';
 
 export function activate(context: vscode.ExtensionContext) {
   const provider = new ComplexityViewProvider(context);
+  initializeStatusBar(OPEN_COMPLEXITY_VIEW_COMMAND);
 
   const subscription = vscode.window.registerWebviewViewProvider(
     ComplexityViewProvider.viewType,
     provider
   );
-  context.subscriptions.push(subscription);
+  const openViewCommand = vscode.commands.registerCommand(
+    OPEN_COMPLEXITY_VIEW_COMMAND,
+    async () => {
+      await vscode.commands.executeCommand('workbench.view.extension.complexity-sidebar');
+      await vscode.commands.executeCommand(`${ComplexityViewProvider.viewType}.focus`);
+    }
+  );
+
+  context.subscriptions.push(subscription, openViewCommand, getStatusBarItem());
 
   const update = () => {
     const editor = vscode.window.activeTextEditor;

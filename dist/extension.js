@@ -1,2 +1,311 @@
-"use strict";var U=Object.create;var M=Object.defineProperty;var $=Object.getOwnPropertyDescriptor;var j=Object.getOwnPropertyNames;var k=Object.getPrototypeOf,H=Object.prototype.hasOwnProperty;var q=(e,t)=>{for(var s in t)M(e,s,{get:t[s],enumerable:!0})},N=(e,t,s,n)=>{if(t&&typeof t=="object"||typeof t=="function")for(let o of j(t))!H.call(e,o)&&o!==s&&M(e,o,{get:()=>t[o],enumerable:!(n=$(t,o))||n.enumerable});return e};var b=(e,t,s)=>(s=e!=null?U(k(e)):{},N(t||!e||!e.__esModule?M(s,"default",{value:e,enumerable:!0}):s,e)),I=e=>N(M({},"__esModule",{value:!0}),e);var z={};q(z,{activate:()=>K});module.exports=I(z);var u=b(require("vscode")),_=b(require("path"));function E(e){let t=e.split(`
-`),s=t.length,n=0,o=!1,c=!1;for(let r of t){let i=r.trim();if(c){n++,i.includes("-->")&&(c=!1);continue}if(i.startsWith("<!--")){n++,i.includes("-->")||(c=!0);continue}if(o){n++,i.includes("*/")&&(o=!1);continue}if(i.startsWith("/*")||i.startsWith("/**")){n++,i.includes("*/")||(o=!0);continue}(i.startsWith("//")||i.startsWith("*")||i.startsWith("#")||i.startsWith("--")||i.startsWith("%"))&&n++}let d=t.filter(r=>r.trim().length===0).length,a=s-d-n,f=s>0?Math.round(n/s*100):0,w=[/^\s*import\s/,/^\s*require\s*\(/,/^\s*#include\s/,/^\s*include\s/,/^\s*using\s/,/^\s*use\s/,/^\s*from\s+\S+\s+import\s/],p=t.filter(r=>w.some(i=>i.test(r))).length,v=/(?:^|[\s;{])(?:function\s+\w+|(?:const|let|var)\s+\w+\s*=\s*(?:async\s*)?\(|(?:public|private|protected|static|async|override|abstract|sealed|virtual|inline)[\s\w]*\s+\w+\s*\(|(?:void|int|float|double|bool|boolean|char|long|short|byte|string|String|auto|var|dynamic|object|Any|Unit|List|Map|Future|Stream|Widget)\s+\w+\s*\(|(?:def|func|fn|fun|sub)\s+\w+\s*\()/gm,S=(e.match(v)??[]).length,g=[],D=/\w+\s*\(([^)]{0,200})\)\s*(?:->[\w\s<>[\]]+)?\s*[{:]/g,l;for(;(l=D.exec(e))!==null;){let r=l[1].trim();g.push(r.length===0?0:r.split(",").length)}let m=g.length>0?Math.round(g.reduce((r,i)=>r+i,0)/g.length*10)/10:0,h=[/\bif\b/g,/\belse\s+if\b/g,/\belif\b/g,/\bunless\b/g,/\bfor\b/g,/\bforeach\b/g,/\bwhile\b/g,/\bdo\b/g,/\bcase\b/g,/\bwhen\b/g,/\bcatch\b/g,/\brescue\b/g,/\bexcept\b/g,/\?\./g,/\?\?/g,/\?\s/g,/&&/g,/\|\|/g,/\band\b/g,/\bor\b/g],F=1;for(let r of h){let i=e.match(r);i&&(F+=i.length)}let x=0,P=0,A=/\b(if|else|elif|for|foreach|while|do|switch|try|catch|finally|rescue|except|unless|when|with)\b/;for(let r of t){let i=r.trim();A.test(i)&&(i.endsWith("{")||i.endsWith(":"))?(x++,x>P&&(P=x)):(i==="}"||i==="};"||i==="},")&&x>0&&x--}return{loc:a,totalLines:s,imports:p,functions:S,cyclomaticComplexity:F,maxNestingDepth:P,avgParams:m,commentRatio:f}}function T(e){let{loc:t,cyclomaticComplexity:s,maxNestingDepth:n,avgParams:o,commentRatio:c,functions:d}=e,a=Math.max(t,1),f=171-.23*s-16.2*Math.log(a)+(c>0?50*Math.sqrt(2.46*(c/100)):0),w=Math.min(100,Math.max(0,Math.round(f/171*100))),p=Math.min(s/50,1),v=Math.min(n/8,1),S=Math.min(o/8,1),g=Math.min(t/500,1),D=Math.min(d/20,1),l=Math.round((p*.35+v*.25+g*.2+S*.12+D*.08)*100),m,h;return l<=20?(m="A",h="Low"):l<=40?(m="B",h="Medium"):l<=60?(m="C",h="High"):l<=80?(m="D",h="Very High"):(m="F",h="Critical"),{score:l,grade:m,label:h,maintainability:w}}var W=b(require("vscode")),B=W.window.createStatusBarItem(W.StatusBarAlignment.Right,100);function L(e,t){let s="\u{1F7E2}";e==="Medium"&&(s="\u{1F7E1}"),e==="High"&&(s="\u{1F534}"),B.text=`Complexity: ${s} ${e} (${t.toFixed(1)})`,B.show()}var R=b(require("vscode")),C=b(require("path")),V=b(require("fs")),y=class{constructor(t){this.context=t}static viewType="complexityView";_view;_lastData;resolveWebviewView(t){this._view=t;let s=t.webview,n=R.Uri.file(C.join(this.context.extensionPath,"media"));s.options={enableScripts:!0,localResourceRoots:[n]};try{let o=C.join(this.context.extensionPath,"media","index.html"),c=V.readFileSync(o,"utf-8"),d=s.asWebviewUri(R.Uri.file(C.join(this.context.extensionPath,"media","style.css")));c=c.replace(/href="style\.css"/g,`href="${d}"`),s.html=c,s.onDidReceiveMessage(a=>{a.type==="ready"&&this._lastData&&s.postMessage(this._lastData)})}catch(o){s.html=`<h1>Error loading view</h1><p>${String(o)}</p>`}}postMetrics(t){this._lastData=t,this._view?.webview.postMessage(t)}};function K(e){let t=new y(e),s=u.window.registerWebviewViewProvider(y.viewType,t);e.subscriptions.push(s);let n=()=>{let o=u.window.activeTextEditor;if(!o)return;let c=o.document.getText(),d=_.basename(o.document.fileName),a=E(c),{score:f,grade:w,label:p,maintainability:v}=T(a);L(p,f),t.postMetrics({filename:d,metrics:a,score:f,grade:w,label:p,maintainability:v})};e.subscriptions.push(u.window.onDidChangeActiveTextEditor(n),u.workspace.onDidSaveTextDocument(n),u.workspace.onDidChangeTextDocument(o=>{o.document===u.window.activeTextEditor?.document&&n()})),n()}0&&(module.exports={activate});
+"use strict";
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// src/extension.ts
+var extension_exports = {};
+__export(extension_exports, {
+  activate: () => activate
+});
+module.exports = __toCommonJS(extension_exports);
+var vscode3 = __toESM(require("vscode"));
+var path2 = __toESM(require("path"));
+
+// src/core/metrics.ts
+function calculateMetrics(text) {
+  const lines = text.split("\n");
+  const totalLines = lines.length;
+  let commentLines = 0;
+  let inBlockComment = false;
+  let inHtmlComment = false;
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (inHtmlComment) {
+      commentLines++;
+      if (line.includes("-->")) {
+        inHtmlComment = false;
+      }
+      continue;
+    }
+    if (line.startsWith("<!--")) {
+      commentLines++;
+      if (!line.includes("-->")) {
+        inHtmlComment = true;
+      }
+      continue;
+    }
+    if (inBlockComment) {
+      commentLines++;
+      if (line.includes("*/")) {
+        inBlockComment = false;
+      }
+      continue;
+    }
+    if (line.startsWith("/*") || line.startsWith("/**")) {
+      commentLines++;
+      if (!line.includes("*/")) {
+        inBlockComment = true;
+      }
+      continue;
+    }
+    if (line.startsWith("//") || // JS/TS/Dart/Java/Kotlin/Go/Swift/C/C++/Rust
+    line.startsWith("*") || // continuation inside block comment
+    line.startsWith("#") || // Python/Ruby/Shell/YAML/R
+    line.startsWith("--") || // SQL/Lua/Haskell
+    line.startsWith("%")) {
+      commentLines++;
+    }
+  }
+  const blankLines = lines.filter((l) => l.trim().length === 0).length;
+  const loc = totalLines - blankLines - commentLines;
+  const commentRatio = totalLines > 0 ? Math.round(commentLines / totalLines * 100) : 0;
+  const importPatterns = [
+    /^\s*import\s/,
+    /^\s*require\s*\(/,
+    /^\s*#include\s/,
+    /^\s*include\s/,
+    /^\s*using\s/,
+    /^\s*use\s/,
+    /^\s*from\s+\S+\s+import\s/
+  ];
+  const imports = lines.filter(
+    (l) => importPatterns.some((p) => p.test(l))
+  ).length;
+  const funcRegex = /(?:^|[\s;{])(?:function\s+\w+|(?:const|let|var)\s+\w+\s*=\s*(?:async\s*)?\(|(?:public|private|protected|static|async|override|abstract|sealed|virtual|inline)[\s\w]*\s+\w+\s*\(|(?:void|int|float|double|bool|boolean|char|long|short|byte|string|String|auto|var|dynamic|object|Any|Unit|List|Map|Future|Stream|Widget)\s+\w+\s*\(|(?:def|func|fn|fun|sub)\s+\w+\s*\()/gm;
+  const functions = (text.match(funcRegex) ?? []).length;
+  const paramCounts = [];
+  const sigRegex = /\w+\s*\(([^)]{0,200})\)\s*(?:->[\w\s<>[\]]+)?\s*[{:]/g;
+  let m;
+  while ((m = sigRegex.exec(text)) !== null) {
+    const inner = m[1].trim();
+    paramCounts.push(inner.length === 0 ? 0 : inner.split(",").length);
+  }
+  const avgParams = paramCounts.length > 0 ? Math.round(paramCounts.reduce((a, b) => a + b, 0) / paramCounts.length * 10) / 10 : 0;
+  const decisionKeywords = [
+    /\bif\b/g,
+    /\belse\s+if\b/g,
+    /\belif\b/g,
+    // Python
+    /\bunless\b/g,
+    // Ruby/Perl
+    /\bfor\b/g,
+    /\bforeach\b/g,
+    /\bwhile\b/g,
+    /\bdo\b/g,
+    /\bcase\b/g,
+    /\bwhen\b/g,
+    // Ruby/Kotlin
+    /\bcatch\b/g,
+    /\brescue\b/g,
+    // Ruby
+    /\bexcept\b/g,
+    // Python
+    /\?\./g,
+    // null-safe
+    /\?\?/g,
+    // null-coalescing
+    /\?\s/g,
+    // ternary
+    /&&/g,
+    /\|\|/g,
+    /\band\b/g,
+    // Python/Ruby
+    /\bor\b/g
+    // Python/Ruby
+  ];
+  let cyclomaticComplexity = 1;
+  for (const pattern of decisionKeywords) {
+    const matches = text.match(pattern);
+    if (matches) {
+      cyclomaticComplexity += matches.length;
+    }
+  }
+  let depth = 0;
+  let maxNestingDepth = 0;
+  const nestingKeywords = /\b(if|else|elif|for|foreach|while|do|switch|try|catch|finally|rescue|except|unless|when|with)\b/;
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (nestingKeywords.test(line) && (line.endsWith("{") || line.endsWith(":"))) {
+      depth++;
+      if (depth > maxNestingDepth) {
+        maxNestingDepth = depth;
+      }
+    } else if (line === "}" || line === "};" || line === "},") {
+      if (depth > 0) {
+        depth--;
+      }
+    }
+  }
+  return { loc, totalLines, imports, functions, cyclomaticComplexity, maxNestingDepth, avgParams, commentRatio };
+}
+
+// src/core/scorer.ts
+function getScore(metrics) {
+  const { loc, cyclomaticComplexity, maxNestingDepth, avgParams, commentRatio, functions } = metrics;
+  const safeLoc = Math.max(loc, 1);
+  const rawMI = 171 - 0.23 * cyclomaticComplexity - 16.2 * Math.log(safeLoc) + (commentRatio > 0 ? 50 * Math.sqrt(2.46 * (commentRatio / 100)) : 0);
+  const maintainability = Math.min(100, Math.max(0, Math.round(rawMI / 171 * 100)));
+  const ccNorm = Math.min(cyclomaticComplexity / 50, 1);
+  const nestNorm = Math.min(maxNestingDepth / 8, 1);
+  const paramNorm = Math.min(avgParams / 8, 1);
+  const locNorm = Math.min(loc / 500, 1);
+  const fnNorm = Math.min(functions / 20, 1);
+  const score = Math.round(
+    (ccNorm * 0.35 + nestNorm * 0.25 + locNorm * 0.2 + paramNorm * 0.12 + fnNorm * 0.08) * 100
+  );
+  let grade;
+  let label;
+  if (score <= 20) {
+    grade = "A";
+    label = "Low";
+  } else if (score <= 40) {
+    grade = "B";
+    label = "Medium";
+  } else if (score <= 60) {
+    grade = "C";
+    label = "High";
+  } else if (score <= 80) {
+    grade = "D";
+    label = "Very High";
+  } else {
+    grade = "F";
+    label = "Critical";
+  }
+  return { score, grade, label, maintainability };
+}
+
+// src/ui/statusBar.ts
+var vscode = __toESM(require("vscode"));
+var statusBar = vscode.window.createStatusBarItem(
+  vscode.StatusBarAlignment.Right,
+  100
+);
+function initializeStatusBar(command) {
+  statusBar.command = command;
+  statusBar.tooltip = "Open Complexity Indicator";
+}
+function getStatusBarItem() {
+  return statusBar;
+}
+function updateStatusBar(label, score) {
+  let icon = "\u{1F7E2}";
+  if (label === "Medium") {
+    icon = "\u{1F7E1}";
+  }
+  if (label === "High") {
+    icon = "\u{1F534}";
+  }
+  statusBar.text = `Complexity: ${icon} ${label} (${score.toFixed(1)})`;
+  statusBar.show();
+}
+
+// src/ui/webview/viewProvider.ts
+var vscode2 = __toESM(require("vscode"));
+var path = __toESM(require("path"));
+var fs = __toESM(require("fs"));
+var ComplexityViewProvider = class {
+  constructor(context) {
+    this.context = context;
+  }
+  static viewType = "complexityView";
+  _view;
+  _lastData;
+  resolveWebviewView(webviewView) {
+    this._view = webviewView;
+    const webview = webviewView.webview;
+    const mediaPath = vscode2.Uri.file(path.join(this.context.extensionPath, "media"));
+    webview.options = {
+      enableScripts: true,
+      localResourceRoots: [mediaPath]
+    };
+    try {
+      const htmlPath = path.join(this.context.extensionPath, "media", "index.html");
+      let html = fs.readFileSync(htmlPath, "utf-8");
+      const styleCssUri = webview.asWebviewUri(vscode2.Uri.file(path.join(this.context.extensionPath, "media", "style.css")));
+      html = html.replace(/href="style\.css"/g, `href="${styleCssUri}"`);
+      webview.html = html;
+      webview.onDidReceiveMessage((msg) => {
+        if (msg.type === "ready" && this._lastData) {
+          webview.postMessage(this._lastData);
+        }
+      });
+    } catch (error) {
+      webview.html = `<h1>Error loading view</h1><p>${String(error)}</p>`;
+    }
+  }
+  postMetrics(data) {
+    this._lastData = data;
+    this._view?.webview.postMessage(data);
+  }
+};
+
+// src/extension.ts
+var OPEN_COMPLEXITY_VIEW_COMMAND = "complexity-indicator.openView";
+function activate(context) {
+  const provider = new ComplexityViewProvider(context);
+  initializeStatusBar(OPEN_COMPLEXITY_VIEW_COMMAND);
+  const subscription = vscode3.window.registerWebviewViewProvider(
+    ComplexityViewProvider.viewType,
+    provider
+  );
+  const openViewCommand = vscode3.commands.registerCommand(
+    OPEN_COMPLEXITY_VIEW_COMMAND,
+    async () => {
+      await vscode3.commands.executeCommand("workbench.view.extension.complexity-sidebar");
+      await vscode3.commands.executeCommand(`${ComplexityViewProvider.viewType}.focus`);
+    }
+  );
+  context.subscriptions.push(subscription, openViewCommand, getStatusBarItem());
+  const update = () => {
+    const editor = vscode3.window.activeTextEditor;
+    if (!editor) {
+      return;
+    }
+    const text = editor.document.getText();
+    const filename = path2.basename(editor.document.fileName);
+    const metrics = calculateMetrics(text);
+    const { score, grade, label, maintainability } = getScore(metrics);
+    updateStatusBar(label, score);
+    provider.postMetrics({ filename, metrics, score, grade, label, maintainability });
+  };
+  context.subscriptions.push(
+    vscode3.window.onDidChangeActiveTextEditor(update),
+    vscode3.workspace.onDidSaveTextDocument(update),
+    vscode3.workspace.onDidChangeTextDocument((e) => {
+      if (e.document === vscode3.window.activeTextEditor?.document) {
+        update();
+      }
+    })
+  );
+  update();
+}
+// Annotate the CommonJS export names for ESM import in node:
+0 && (module.exports = {
+  activate
+});
+//# sourceMappingURL=extension.js.map

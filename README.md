@@ -8,6 +8,10 @@ A VS Code extension that analyses the complexity of your active file in real tim
 
 ---
 
+![Demo](resources/demo.png)
+
+---
+
 ## Features
 
 - **Live updates** — metrics refresh as you type, save, or switch files
