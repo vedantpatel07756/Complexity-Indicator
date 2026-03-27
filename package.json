@@ -2,7 +2,7 @@
   "name": "complexity-indicator",
   "displayName": "Complexity Indicator",
   "description": "Analyze and visualize file complexity",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "publisher": "vedantpatel",
   "icon": "assets/icon.png",
   "repository": {
