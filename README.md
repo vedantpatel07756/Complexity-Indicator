@@ -1,10 +1,10 @@
 # Complexity Indicator
 
-<p align="center">
+<p align="left">
   <img src="https://raw.githubusercontent.com/vedantpatel07756/Complexity-Indicator/main/resources/icon.png" alt="Complexity Indicator Logo" width="120"/>
 </p>
 
-A VS Code extension that analyses the complexity of your active file in real time and displays a rich metrics dashboard in the sidebar — built with Flutter/Dart developers in mind, but works with any language.
+A VS Code extension that analyses the complexity of your active file in real time and displays a rich metrics dashboard in the sidebar — works with any language.
 
 ---
 
@@ -14,6 +14,8 @@ A VS Code extension that analyses the complexity of your active file in real tim
 - **Sidebar panel** — dedicated view accessible from the activity bar
 - **Status bar badge** — shows the complexity label (Low / Medium / High / Very High / Critical) at a glance
 - **Info tooltips** — click the ⓘ icon on any metric card to learn what it measures and what the healthy thresholds are
+- **Multi-language support** — works with any language (TypeScript, JavaScript, Python, Go, Rust, and more)
+- **9 metrics at a glance** — Complexity Score, Maintainability Index, LOC, Function Count, Cyclomatic Complexity, Max Nesting Depth, Average Parameters, Comment Ratio, and Import Count
 
 ---
 
@@ -118,24 +120,3 @@ The total number of `import` statements in the file.
 
 > A high import count can indicate tight coupling or a file doing too much. Consider extracting responsibilities into dedicated helpers.
 
----
-
-## Installation (Development)
-
-1. Clone the repository
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Compile:
-   ```bash
-   npm run compile
-   ```
-4. Press `F5` in VS Code to launch the **Extension Development Host**
-5. Open any source file — the **Complexity** icon appears in the activity bar
-
-To watch for changes during development:
-```bash
-npm run watch
-```
----
